@@ -26,7 +26,7 @@ namespace Cosmos.DataTransfer.AzureTableAPIExtension
             var createTasks = new List<Task>();
             await foreach(var item in dataItems.WithCancellation(cancellationToken))
             {
-               var entity = item.ToTableEntity(settings.PartitionKeyFieldName, settings.RowKeyFieldName);
+               var entity = item.ToTableEntity(settings);
                createTasks.Add(tableClient.AddEntityAsync(entity));
             }
 
