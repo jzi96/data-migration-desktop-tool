@@ -20,11 +20,18 @@ namespace Cosmos.DataTransfer.AzureTableAPIExtension
             var settings = config.Get<AzureTableAPIDataSourceSettings>();
             settings.Validate();
 
-            var serviceClient = new TableServiceClient(settings.ConnectionString);
+            var tco = new TableClientOptions(TableClientOptions.ServiceVersion.V2020_12_06);
+            tco.Retry.Mode = Azure.Core.RetryMode.Exponential;
+            tco.Retry.NetworkTimeout = TimeSpan.FromMilliseconds(500);
+            tco.Retry.Delay = TimeSpan.FromMilliseconds(100);
+            tco.Retry.MaxDelay = TimeSpan.FromSeconds(20);
+            tco.Retry.MaxRetries = 10;
+            var serviceClient = new TableServiceClient(settings.ConnectionString, tco);
             var tableClient = serviceClient.GetTableClient(settings.Table);
 
             //Pageable<TableEntity> queryResultsFilter = tableClient.Query<TableEntity>(filter: $"PartitionKey eq '{partitionKey}'");
             AsyncPageable<TableEntity> queryResults;
+            logger.LogDebug("Begin reading data  ... {query}", settings.QueryFilter);
             if (!string.IsNullOrWhiteSpace(settings.QueryFilter)) {
                 queryResults = tableClient.QueryAsync<TableEntity>(filter: settings.QueryFilter);
             } else {
