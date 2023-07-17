@@ -13,7 +13,7 @@ namespace Cosmos.DataTransfer.AzureTableAPIExtension.UnitTests.Data
                 { "Name", "Chris" }
             });
 
-            var entity = dataitem.ToTableEntity(null, null);
+            var entity = dataitem.ToTableEntity(new Settings.AzureTableAPIDataSinkSettings());
             Assert.IsTrue(entity.ContainsKey("Name"));
             Assert.AreEqual("Chris", entity.GetString("Name"));
         }
@@ -26,7 +26,7 @@ namespace Cosmos.DataTransfer.AzureTableAPIExtension.UnitTests.Data
                 { "Number", 123 }
             });
 
-            var entity = dataitem.ToTableEntity(null, null);
+            var entity = dataitem.ToTableEntity(new Settings.AzureTableAPIDataSinkSettings());
             Assert.IsTrue(entity.ContainsKey("Number"));
             Assert.AreEqual(123, entity.GetInt32("Number"));
         }
@@ -39,7 +39,7 @@ namespace Cosmos.DataTransfer.AzureTableAPIExtension.UnitTests.Data
                 { "PartitionKey", 123 }
             });
 
-            var entity = dataitem.ToTableEntity(null, null);
+            var entity = dataitem.ToTableEntity(new Settings.AzureTableAPIDataSinkSettings());
             Assert.AreEqual(1, entity.Keys.Count());
             Assert.AreEqual("123", entity.PartitionKey);
         }
@@ -52,7 +52,7 @@ namespace Cosmos.DataTransfer.AzureTableAPIExtension.UnitTests.Data
                 { "MyID", 123 }
             });
 
-            var entity = dataitem.ToTableEntity("MyID", null);
+            var entity = dataitem.ToTableEntity(new Settings.AzureTableAPIDataSinkSettings() { PartitionKeyFieldName = "MyID" });
             Assert.AreEqual(1, entity.Keys.Count());
             Assert.AreEqual("123", entity.PartitionKey);
         }
@@ -65,7 +65,7 @@ namespace Cosmos.DataTransfer.AzureTableAPIExtension.UnitTests.Data
                 { "PartitionKey", "WI" }
             });
 
-            var entity = dataitem.ToTableEntity(null, null);
+            var entity = dataitem.ToTableEntity(new Settings.AzureTableAPIDataSinkSettings());
             Assert.AreEqual(1, entity.Keys.Count());
             Assert.AreEqual("WI", entity.PartitionKey);
         }
@@ -78,7 +78,7 @@ namespace Cosmos.DataTransfer.AzureTableAPIExtension.UnitTests.Data
                 { "MyVal", "WI" }
             });
 
-            var entity = dataitem.ToTableEntity("MyVal", null);
+            var entity = dataitem.ToTableEntity(new Settings.AzureTableAPIDataSinkSettings() { PartitionKeyFieldName = "MyVal" });
             Assert.AreEqual(1, entity.Keys.Count());
             Assert.AreEqual("WI", entity.PartitionKey);
         }
@@ -91,7 +91,7 @@ namespace Cosmos.DataTransfer.AzureTableAPIExtension.UnitTests.Data
                 { "RowKey", 123 }
             });
 
-            var entity = dataitem.ToTableEntity(null, null);
+            var entity = dataitem.ToTableEntity(new Settings.AzureTableAPIDataSinkSettings());
             Assert.AreEqual(1, entity.Keys.Count());
             Assert.AreEqual("123", entity.RowKey);
         }
@@ -104,7 +104,7 @@ namespace Cosmos.DataTransfer.AzureTableAPIExtension.UnitTests.Data
                 { "MyKey", 123 }
             });
 
-            var entity = dataitem.ToTableEntity(null, "MyKey");
+            var entity = dataitem.ToTableEntity(new Settings.AzureTableAPIDataSinkSettings() { RowKeyFieldName = "MyKey" });
             Assert.AreEqual(1, entity.Keys.Count());
             Assert.AreEqual("123", entity.RowKey);
         }
@@ -117,7 +117,7 @@ namespace Cosmos.DataTransfer.AzureTableAPIExtension.UnitTests.Data
                 { "RowKey", "WI" }
             });
 
-            var entity = dataitem.ToTableEntity(null, null);
+            var entity = dataitem.ToTableEntity(new Settings.AzureTableAPIDataSinkSettings());
             Assert.AreEqual(1, entity.Keys.Count());
             Assert.AreEqual("WI", entity.RowKey);
         }
@@ -130,7 +130,7 @@ namespace Cosmos.DataTransfer.AzureTableAPIExtension.UnitTests.Data
                 { "MyVal", "WI" }
             });
 
-            var entity = dataitem.ToTableEntity(null, "MyVal");
+            var entity = dataitem.ToTableEntity(new Settings.AzureTableAPIDataSinkSettings() { RowKeyFieldName = "MyVal" });
             Assert.AreEqual(1, entity.Keys.Count());
             Assert.AreEqual("WI", entity.RowKey);
         }
@@ -144,7 +144,7 @@ namespace Cosmos.DataTransfer.AzureTableAPIExtension.UnitTests.Data
                 { "RowKey", 123 }
             });
 
-            var entity = dataitem.ToTableEntity(String.Empty, String.Empty);
+            var entity = dataitem.ToTableEntity(new Settings.AzureTableAPIDataSinkSettings() { PartitionKeyFieldName = String.Empty, RowKeyFieldName = String.Empty });
             Assert.AreEqual(2, entity.Keys.Count());
             Assert.AreEqual("WI", entity.PartitionKey);
             Assert.AreEqual("123", entity.RowKey);
@@ -159,10 +159,85 @@ namespace Cosmos.DataTransfer.AzureTableAPIExtension.UnitTests.Data
                 { "ID", 456 }
             });
 
-            var entity = dataitem.ToTableEntity("MyVal", "ID");
+            var entity = dataitem.ToTableEntity(new Settings.AzureTableAPIDataSinkSettings() { PartitionKeyFieldName = "MyVal", RowKeyFieldName = "ID" });
             Assert.AreEqual(2, entity.Keys.Count());
             Assert.AreEqual("Tailspin", entity.PartitionKey);
             Assert.AreEqual("456", entity.RowKey);
+        }
+
+        [TestMethod]
+        public void AzureTableAPIDataItem_SkipField_01()
+        {
+            var dataitem = new MockDataItem(new Dictionary<string, object>()
+            {
+                { "RemoveId", "WIRem" },
+                { "Id", "WI" }
+            });
+
+            Settings.AzureTableAPIDataSinkSettings settings = new Settings.AzureTableAPIDataSinkSettings
+            {
+                PartitionKeyFieldName = "Id",
+                SkipFields = new string[] { "RemoveId" }
+            };
+            var entity = dataitem.ToTableEntity(settings);
+            Assert.AreEqual(1, entity.Keys.Count());
+            Assert.AreEqual("WI", entity.PartitionKey);
+        }
+        [TestMethod]
+        public void AzureTableAPIDataItem_SkipField_03()
+        {
+            var dataitem = new MockDataItem(new Dictionary<string, object>()
+            {
+                { "RemoveId", "WIRem" },
+                { "Id", "WI" }
+            });
+
+            Settings.AzureTableAPIDataSinkSettings settings = new Settings.AzureTableAPIDataSinkSettings
+            {
+                PartitionKeyFieldName = "Id",
+                SkipFields = new string[] { "removeId" }
+            };
+            var entity = dataitem.ToTableEntity(settings);
+            Assert.AreEqual(1, entity.Keys.Count());
+            Assert.AreEqual("WI", entity.PartitionKey);
+        }
+        [TestMethod]
+        public void AzureTableAPIDataItem_SkipField_02()
+        {
+            var dataitem = new MockDataItem(new Dictionary<string, object>()
+            {
+                { "RemoveId", "WIRem" },
+                { "Id", "WI" },
+                { "AnyField", "CH" }
+            });
+
+            Settings.AzureTableAPIDataSinkSettings settings = new Settings.AzureTableAPIDataSinkSettings
+            {
+                PartitionKeyFieldName = "Id",
+                SkipFields = new string[] { "RemoveId" }
+            };
+            var entity = dataitem.ToTableEntity(settings);
+            Assert.AreEqual(2, entity.Keys.Count());
+            Assert.AreEqual("WI", entity.PartitionKey);
+        }
+        [TestMethod]
+        public void AzureTableAPIDataItem_MapField_01()
+        {
+            var dataitem = new MockDataItem(new Dictionary<string, object>()
+            {
+                { "RemoveId", "WIRem" },
+                { "Id", "WI" }
+            });
+
+            Settings.AzureTableAPIDataSinkSettings settings = new Settings.AzureTableAPIDataSinkSettings
+            {
+                PartitionKeyFieldName = "Id",
+                MapFields = new Dictionary<string, string>() { { "RemoveId", "NewField"} }
+            };
+            var entity = dataitem.ToTableEntity(settings);
+            Assert.AreEqual(2, entity.Keys.Count());
+            Assert.AreEqual("WI", entity.PartitionKey);
+            Assert.AreEqual("WIRem", entity["NewField"]);
         }
     }
 }

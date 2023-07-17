@@ -40,7 +40,7 @@ namespace Cosmos.DataTransfer.AzureTableAPIExtension
                 {
                     logger.LogDebug("Begin processing write ... {SemaphoreCount}", sm.CurrentCount);
                     await sm.WaitAsync();
-                    var entity = item.ToTableEntity(settings.PartitionKeyFieldName, settings.RowKeyFieldName);
+                    var entity = item.ToTableEntity(settings);
                     createTasks.Add(tableClient.UpsertEntityAsync(entity, cancellationToken: cancellationToken));
 
                     if (sm.CurrentCount == 0)
