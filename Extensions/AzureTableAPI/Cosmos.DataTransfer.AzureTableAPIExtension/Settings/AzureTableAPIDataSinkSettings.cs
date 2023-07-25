@@ -15,5 +15,6 @@ namespace Cosmos.DataTransfer.AzureTableAPIExtension.Settings
         /// </summary>
         [JsonConverter(typeof(CaseInsensitiveDictionaryConverter<string>))] 
         public Dictionary<string, string>? MapFields { get; set; }
+        public bool InsertOnly { get; set; }
     }
 }
