@@ -33,18 +33,20 @@ namespace Cosmos.DataTransfer.AzureTableAPIExtension
             var createTasks = new List<Task>(maxParallelTask);
             var importSw = Stopwatch.StartNew();
             int chunk = 0;
+            long numItems = 0;
             SemaphoreSlim sm = new SemaphoreSlim(maxParallelTask, maxParallelTask);
             try
             {
                 await foreach (var item in dataItems.WithCancellation(cancellationToken))
                 {
+                    Interlocked.Increment(ref numItems);
                     logger.LogDebug("Begin processing write ... {SemaphoreCount}", sm.CurrentCount);
                     await sm.WaitAsync();
                     var entity = item.ToTableEntity(settings);
                     if(settings.InsertOnly)
                         createTasks.Add(tableClient.AddEntityAsync(entity, cancellationToken: cancellationToken));
                     else
-                    createTasks.Add(tableClient.UpsertEntityAsync(entity, cancellationToken: cancellationToken));
+                        createTasks.Add(tableClient.UpsertEntityAsync(entity, cancellationToken: cancellationToken));
 
                     if (sm.CurrentCount == 0)
                     {
@@ -62,7 +64,7 @@ namespace Cosmos.DataTransfer.AzureTableAPIExtension
             {
                 sm.Dispose();
                 importSw.Stop();
-                logger.LogInformation("The import (write) of all items (chunks={chunks}) took {elapsed}", chunk, importSw.Elapsed);
+                logger.LogInformation("The import (write) of {numItems} items (chunks={chunks}) took {elapsed} {rate}items/min", numItems, chunk, importSw.Elapsed, (numItems / importSw.Elapsed.TotalMinutes));
             }
         }
 
